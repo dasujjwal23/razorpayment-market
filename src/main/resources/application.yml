@@ -1,0 +1,75 @@
+server:
+   port: 8082
+   ssl:
+    key-alias: spring-https
+    key-store: classpath:javatechie.jks
+    key-store-password: password
+    key-store-type: JKS
+
+spring:
+  application:
+    name: market
+  h2:
+   console:
+      enabled: true
+  data:
+    mongodb:
+      db2:
+        host: localhost
+        port: 27017
+        database: myDB
+db1:
+  datasource:
+    url: jdbc:h2:~/deloitte
+    driver-class-name: org.h2.Driver
+db2:
+  data:
+     mongodb:
+        host: localhost
+        port: 27017
+        database: myDB
+
+logging:
+    level:
+      root: INFO
+      org.springframework.web: INFO
+      org.hibernate: ERROR
+
+retail:
+  base_url: https://api.razorpay.com
+  endpoint: /v1/payment_links
+  username : dasujjwal1996@gmail.com
+
+payment:
+   key_id: rzp_test_vG3eSPBFVd2wiv
+   key_secret: sM9AVDHsjYIO930c4vaWTFJi
+
+resilience4j.circuitbreaker:
+     instances:
+         PayAPI:
+             registerHealthIndicator: true
+             slidingWindowSize: 5
+             minimumNumberOfCalls: 5
+             failureRateThreshold: 50
+             waitDurationInOpenState: 10s
+             permittedNumberOfCallsInHalfOpenState: 3
+             eventConsumerBufferSize: 10
+
+resilience4j.timelimiter:
+     instances:
+         PayAPI:
+             timeoutDuration: 2s
+             cancelRunningFuture: true
+
+resilience4j.thread-pool-bulkhead:
+     instances:
+         PayAPI:
+             maxThreadPoolSize: 1
+             coreThreadPoolSize: 1
+
+management:
+   endpoints:
+       web:
+         exposure:
+             include: '*'  
+
