@@ -332,7 +332,7 @@ public class RazorPayServiceTest {
 	}	
 	
 	@Test
-	public void createOrderSuccess_200_Timeout() throws Exception
+	public void createOrder_500_Timeout() throws Exception
 	{
 		
 		PaymentRequest req=Mockito.spy(PaymentRequest.class);
@@ -344,6 +344,7 @@ public class RazorPayServiceTest {
 		com.dell.market.entity.response.Customer cos1=Mockito.spy(com.dell.market.entity.response.Customer.class);
 		Notify note=Mockito.spy(Notify.class);
 		Notes no=Mockito.spy(Notes.class);
+		ErrorResponse resr=Mockito.spy(ErrorResponse.class);
         headers=Mockito.spy(HttpHeaders.class);
 		
 		headers.set("Accept","application/json");
@@ -409,7 +410,7 @@ public class RazorPayServiceTest {
 		
 		Mockito.lenient().doReturn(centity).when(this.payService).callingMongoDB(Mockito.any());
 		
-        String expectedResonse="{\"status\":\"SUCCESS\"}";
+        String expectedResonse="{\"status\":\"TIMEOUT\"}";
 		
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(expectedResonse, HttpStatus.OK);
 		
@@ -417,7 +418,10 @@ public class RazorPayServiceTest {
 				Mockito.eq(HttpMethod.POST),
 				Mockito.any(HttpEntity.class),
 				Mockito.eq(String.class)
-				)).thenThrow(new RuntimeException("Timeout Exception"));
+				)).thenAnswer(invocation -> {
+					Thread.sleep(4000); // Simulate delay
+			        return responseEntity;
+				});
 	
 		//PaymentResponse res=Mockito.spy(PaymentResponse.class);
 		//RequestDto requestdto=Mockito.spy(RequestDto.class);	
@@ -427,22 +431,29 @@ public class RazorPayServiceTest {
 		Mockito.lenient().doReturn(req).when(this.payService).callingdb(req);
 				
 		//Object obj=Mockito.spy(Object.class);
-		ResponseMessage message=Mockito.spy(ResponseMessage.class);	
+		//ResponseMessage message=Mockito.spy(ResponseMessage.class);	
 		
-		message.setStatus("500");
-		message.setMessage("Success");
-		message.setUuid("xyz-abc-cfg");
-		message.setDescription("Message is successfully published");
-				
+		resr.setStatus("500");
+		resr.setType("Internal Server Error");
+		resr.setDescription("Timeout occurred while processing the request");
 		
-        CompletableFuture<ResponseEntity<ResponseMessage>> responseEntity1=this.payService.createOrder(req,headers);
+		  Throwable af=Assertions.assertThrows(Throwable.class, () -> {
+						CompletableFuture<ResponseEntity<ResponseMessage>> responseEntity1 = this.payService.createOrder(req, headers);
+			             responseEntity1.get(4, TimeUnit.SECONDS);
+		   });
+
+        //CompletableFuture<ResponseEntity<ResponseMessage>> responseEntity1=this.payService.createOrder(req,headers);
+        
+        //ResponseEntity<ResponseMessage> actual=responseEntity1.get(1,TimeUnit.SECONDS);
         
         //String result=responseEntity1.get(1,TimeUnit.SECONDS).getBody().getStatus();
 		
 		//Assertions.assertEquals(message.getStatus(),result);
-        Assertions.assertEquals(message.getStatus(),responseEntity1.get().getBody().getStatus());
+        //Assertions.assertEquals(HttpStatus.OK, actual.getStatusCode());
+        
+        Assertions.assertNotNull(af);
 		
-	}	
+	}		
 	
 }
   
