@@ -1,5 +1,12 @@
 FROM public.ecr.aws/amazonlinux/amazonlinux:2
-RUN apt -gt update && apt -get install -y openjdk-17-jre
-EXPOSE 8080
-ADD target/elm-d-razorpayment-market.jar elm-d-razorpayment-market.jar 
-ENTRYPOINT ["java","-jar","/elm-d-razorpayment-market.jar"]
+
+# Install Java 17 (Amazon Corretto)
+RUN yum update -y && \
+    yum install -y java-17-amazon-corretto-headless && \
+    yum clean all
+
+# Copy jar
+COPY target/elm-d-razorpayment-market.jar app.jar
+
+# Run the app
+ENTRYPOINT ["java", "-jar", "app.jar"]
