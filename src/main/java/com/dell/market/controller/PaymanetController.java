@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -36,6 +38,7 @@ import com.dell.market.service.PaymantService;
 import com.dell.market.service.PaymentException;
 import com.dell.market.service.RazorPayService;
 import com.dell.market.service.RazorPayUpdateService;
+import com.dell.market.service.RazorpayPatchService;
 import com.dell.market.service.SyncCallService;
 import com.dell.market.service.TaskExecutionTime;
 import com.dell.market.util.ErrorResponse;
@@ -65,6 +68,9 @@ public class PaymanetController {
 	
 	@Autowired
 	PaymantService service;
+	
+	@Autowired
+	RazorpayPatchService razorpayPatchService;
 	
 	@Autowired
 	RazorPayService payService;
@@ -220,6 +226,54 @@ public class PaymanetController {
 		  }catch (Exception ex) {
 			 long endTime = System.currentTimeMillis();
 			 log.error("Exception occurred in PaymanetController.createOrderPayUpdate method with Response Time : "+(endTime - startTime)+" ms , Exception : "+ex.getMessage());
+			 //ErrorResponse error=new ErrorResponse("500","Internal Server Error",ex.getMessage());
+		     throw new ApiException(new ErrorResponse("500","Internal Server Error",ex.getMessage()));
+		  }
+	     return resp;
+	}
+	
+	@Operation(
+			operationId="createOrderPayPatch",
+			summary="Updating a Payment Mode",
+			description="This is the process of updating a oder into razorpay"
+			)
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			              description="updates a successful payment for sepecifice field",
+			            		  content=@Content(
+					            		  mediaType="application/json",
+					            		  schema=@Schema(implementation=Object.class)
+					            		  )
+		            ),
+			@ApiResponse(responseCode="500",
+            description="No Value Found",  
+          		  content=@Content(
+		            		  mediaType="application/json",
+		            		  schema=@Schema(implementation=Object.class)
+		            		  )
+                   )}
+			 )  
+	@PatchMapping(value="/razorpay/patch/{reference_id}",produces ="application/json",consumes ="application/json")
+	public ResponseEntity<ResponseMessage> createOrderPayPatch(@RequestHeader(value="Accept", required=true) String Accept,
+			                                              @RequestHeader(value="UUID", required=true) String uuid,
+			                         @RequestBody Map<String,Object> payment,@PathVariable String reference_id) throws ApiException,PaymentException,JsonMappingException, JsonProcessingException, InterruptedException, ExecutionException
+	{
+		 long startTime = System.currentTimeMillis();
+		 uuid=validationUUID(uuid);
+		 HttpHeaders headers=null;
+		 ResponseEntity<ResponseMessage> resp=null;
+		 try {
+			  if(headers==null) {
+				headers=new HttpHeaders();
+				headers.set("Accept",Accept);
+				headers.set("uuid", uuid);
+			    resp=ResponseEntity.ok(this.razorpayPatchService.razorPatch(payment,headers,reference_id));
+				long endTime = System.currentTimeMillis();
+				log.info("Response Time of PaymanetController.createOrderPayPatch method : "+(endTime - startTime)+" ms ");
+			   }	
+		  }catch (Exception ex) {
+			 long endTime = System.currentTimeMillis();
+			 log.error("Exception occurred in PaymanetController.createOrderPayPatch method with Response Time : "+(endTime - startTime)+" ms , Exception : "+ex.getMessage());
 			 //ErrorResponse error=new ErrorResponse("500","Internal Server Error",ex.getMessage());
 		     throw new ApiException(new ErrorResponse("500","Internal Server Error",ex.getMessage()));
 		  }
