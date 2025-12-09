@@ -11,7 +11,7 @@ spring:
     name: market
   h2:
    console:
-      enabled: true
+      enabled: true 
   data:
     mongodb:
       db2:

@@ -239,7 +239,7 @@ public class PaymanetController {
 			)
 	@ApiResponses({
 			@ApiResponse(responseCode="200",
-			              description="updates a successful payment for sepecifice field",
+			              description="updates a successful payment for specific field",
 			            		  content=@Content(
 					            		  mediaType="application/json",
 					            		  schema=@Schema(implementation=Object.class)
